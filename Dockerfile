@@ -8,5 +8,4 @@ COPY src ./src
 # Build without running tests
 RUN mvn clean install -DskipTests
 
-# Set default command to run tests when container starts
 CMD ["mvn", "test"]
