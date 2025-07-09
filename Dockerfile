@@ -1,13 +1,17 @@
-FROM maven:3.8.6-eclipse-temurin-17 AS build
+# Use Maven with Java 17
+FROM maven:3.8.6-eclipse-temurin-17
 
+# Set working directory inside the container
 WORKDIR /app
 
-# Copy POM and source files from subdirectory
-COPY pom.xml .
-COPY source-folder/src ./src
+# Copy POM file first to leverage Docker cache
+COPY ../actual-source/pom.xml .
 
-# Optional: skip tests during build
-RUN mvn clean package -Dmaven.test.skip=true
+# Copy source code from the actual directory
+COPY ../actual-source/src ./src
 
-# Run tests when container starts (optional)
+# Build the project (skip tests to avoid test-time failures)
+RUN mvn clean install -DskipTests
+
+# Default command (optional)
 CMD ["mvn", "test"]
