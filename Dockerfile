@@ -1,17 +1,26 @@
-# Use Maven with Java 17
-FROM maven:3.8.6-eclipse-temurin-17
+# Stage 1: Build using Maven and Java 17
+FROM maven:3.9.6-eclipse-temurin-17 AS build
 
-# Set working directory inside the container
+# Set working directory
 WORKDIR /app
 
-# Copy POM file first to leverage Docker cache
-COPY ../actual-source/pom.xml .
+# Copy all files
+COPY . .
 
-# Copy source code from the actual directory
-COPY ../actual-source/src ./src
+# Build the project without tests (optional: add `-DskipTests`)
+RUN mvn clean package -DskipTests
 
-# Build the project (skip tests to avoid test-time failures)
-RUN mvn clean install -DskipTests
+# Stage 2: Run using Java 17 JRE
+FROM eclipse-temurin:17-jre
 
-# Default command (optional)
-CMD ["mvn", "test"]
+# Create working directory
+WORKDIR /app
+
+# Copy the built JAR files (adjust path if necessary)
+COPY --from=build /app/healenium-web-selenoid/target/*.jar app.jar
+
+# Expose Healenium port if needed
+EXPOSE 7878
+
+# Run the application
+ENTRYPOINT ["java", "-jar", "app.jar"]
